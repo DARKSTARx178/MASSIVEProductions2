@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import type { ServiceItem } from '@/app/(tabs)/services';
+import type { ServiceItem } from '@/app/(tabs)/study';
 
 export function useServiceList(reloadKey: number): ServiceItem[] {
   const [services, setServices] = useState<ServiceItem[]>([]);

@@ -9,7 +9,6 @@ import Voice from '@react-native-voice/voice';
 import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/native';
 import { getThemeColors } from '@/utils/theme';
-import { aiExploreFilterControl } from './explore';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const ai = new GoogleGenAI({ apiKey: "AIzaSyAIjiRYwpgibikuLrEsqhlpHD97NA6aR5U" });
@@ -403,26 +402,26 @@ function TabLayout({ onHeaderSwipe }: { onHeaderSwipe: () => void }) {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="work"
         options={{
-          title: "Equipment",
+          title: "Work",
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="hospital-box" size={32} color={color} />
+            <MaterialCommunityIcons name="pencil" size={32} color={color} />
           ),
           tabBarLabel: ({ color }) => (
-            <Text style={{ color, fontSize: 12 }}>Equipment</Text>
+            <Text style={{ color, fontSize: 12 }}>Work</Text>
           ),
         }}
       />
       <Tabs.Screen
-        name="services"
+        name="study"
         options={{
-          title: "Services",
+          title: "Study",
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="account-heart" size={32} color={color} />
+            <MaterialCommunityIcons name="book" size={32} color={color} />
           ),
           tabBarLabel: ({ color }) => (
-            <Text style={{ color, fontSize: 12 }}>Services</Text>
+            <Text style={{ color, fontSize: 12 }}>Study</Text>
           ),
         }}
       />
@@ -635,25 +634,6 @@ const allowedRoutes = [
             }}
             {...helpPanResponder.panHandlers}
           >
-            <TouchableOpacity
-              onPress={() => router.push('/helpdocs')}
-              activeOpacity={0.8}
-              style={{
-                backgroundColor: '#7B61FF',
-                borderRadius: 28,
-                width: 56,
-                height: 56,
-                justifyContent: 'center',
-                alignItems: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 5,
-              }}
-            >
-              <Ionicons name="help" size={36} color="#fff" />
-            </TouchableOpacity>
           </Animated.View>
         </Animated.View>
       </AccessibilityProvider>

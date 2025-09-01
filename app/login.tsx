@@ -1,38 +1,44 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useAccessibility } from "@/contexts/AccessibilityContext";
-import { getThemeColors } from "@/utils/theme";
-import { getFontSizeValue } from "@/utils/fontSizes";
-import { auth } from "../firebase/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { Ionicons } from '@expo/vector-icons';
+import { useAccessibility } from '@/contexts/AccessibilityContext';
+import { getThemeColors } from '@/utils/theme';
+import { getFontSizeValue } from '@/utils/fontSizes';
+import { auth } from '../firebase/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+
 
 const Login: React.FC = () => {
   const router = useRouter();
   const { fontSize } = useAccessibility();
   const theme = getThemeColors();
   const textSize = getFontSizeValue(fontSize);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState(''); // Firebase uses email instead of "username"
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleLogin = async () => {
-    setError("");
+    setError('');
     if (!email || !password) {
-      setError("Please fill all fields.");
+      setError('Please fill all fields.');
       return;
     }
 
     try {
-      // ✅ Login with Firebase
-      await signInWithEmailAndPassword(auth, email, password);
+      // ✅ Firebase Auth login
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      // ✅ No SecureStore, Firebase persists automatically
-      router.replace("/profile");
+      // ✅ Store user securely
+      await SecureStore.setItemAsync('user', JSON.stringify({ uid: user.uid, email: user.email }));
+
+      // ✅ Redirect
+      router.replace('/profile');
     } catch (e: any) {
-      console.error("Login error:", e);
-      setError(e.message || "Login failed. Please try again.");
+      console.error('Login error:', e);
+      setError(e.message || 'Login failed. Please try again.');
     }
   };
 
@@ -41,7 +47,7 @@ const Login: React.FC = () => {
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={28} color={theme.text} />
       </TouchableOpacity>
-      <Text style={{ color: theme.text, fontWeight: "bold", fontSize: textSize + 8, marginBottom: 20 }}>Login</Text>
+      <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: textSize + 8, marginBottom: 20 }}>Login</Text>
 
       <TextInput
         style={[styles.input, { color: theme.text, borderColor: theme.primary }]}
@@ -61,13 +67,13 @@ const Login: React.FC = () => {
         onChangeText={setPassword}
       />
 
-      {error ? <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text> : null}
+      {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
 
       <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleLogin}>
-        <Text style={{ color: theme.background, fontWeight: "bold", fontSize: textSize }}>Login</Text>
+        <Text style={{ color: theme.background, fontWeight: 'bold', fontSize: textSize }}>Login</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.replace("/register")}>
+      <TouchableOpacity onPress={() => router.replace('/register')}>
         <Text style={{ color: theme.primary, marginTop: 10 }}>Don't have an account? Register</Text>
       </TouchableOpacity>
     </View>
@@ -77,32 +83,32 @@ const Login: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
     paddingTop: 80,
     paddingHorizontal: 24,
   },
   backButton: {
-    position: "absolute",
+    position: 'absolute',
     top: 35,
     left: 20,
     zIndex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
     padding: 6,
   },
   input: {
-    width: "100%",
+    width: '100%',
     borderWidth: 1,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
     fontSize: 16,
-    backgroundColor: "rgba(0,0,0,0.04)",
+    backgroundColor: 'rgba(0,0,0,0.04)'
   },
   button: {
-    width: "100%",
+    width: '100%',
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 8,
   },
 });

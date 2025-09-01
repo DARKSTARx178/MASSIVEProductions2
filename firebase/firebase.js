@@ -5,12 +5,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAgS0BJV9TIcUTgqvB8FYcSmH-_QfcVPS0",
-  authDomain: "massiveproductionsbackend.firebaseapp.com",
-  projectId: "massiveproductionsbackend",
-  storageBucket: "massiveproductionsbackend.firebasestorage.app",
-  messagingSenderId: "999538886522",
-  appId: "1:999538886522:web:a7c4b2c1cc18aef7afb8c3"
+  apiKey: "AIzaSyBLq5KEYwGoODg-IhX-KD_wq7glWW719d0",
+  authDomain: "twinxcarebackend.firebaseapp.com",
+  projectId: "twinxcarebackend",
+  storageBucket: "twinxcarebackend.firebasestorage.app",
+  messagingSenderId: "791637368111",
+  appId: "1:791637368111:web:2110bb059b6427ca3295da"
 };
 
 // Initialize Firebase

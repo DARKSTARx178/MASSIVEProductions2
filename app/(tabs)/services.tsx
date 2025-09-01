@@ -188,6 +188,25 @@ export default function Services() {
         )}
 
         {/* Services Grid */}
+        <FlatList
+          data={filteredItems}
+          keyExtractor={(_, i) => i.toString()}
+          numColumns={numColumns}
+          contentContainerStyle={{ paddingBottom: 30 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => router.push({ pathname: '/rental/booking', params: item })}
+              activeOpacity={0.8}
+              style={[styles.gridItem, { borderColor: theme.primary, maxWidth: `${100 / numColumns}%` }]}
+            >
+              <Image source={{ uri: item.image }} style={[styles.gridImage, { width: screenWidth / numColumns - 32, height: (screenWidth / numColumns - 32) * 0.7, marginBottom: 8 }]} />
+              <Text style={[styles.gridText, { color: theme.text, fontSize: gridTextSize(textSize), maxWidth: '95%' }]} numberOfLines={2}>{item.name}</Text>
+              <Text style={[styles.gridText, { color: theme.text, fontSize: gridTextSize(textSize - 4), maxWidth: '95%' }]} numberOfLines={1}>Next: {getNextAvailability(item.schedule)}</Text>
+              <Text style={[styles.gridText, { color: theme.text, fontSize: gridTextSize(textSize - 4), maxWidth: '95%' }]} numberOfLines={1}>${item.price}/hr | Pax: {getNextPax(item.schedule)}</Text>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={<Text style={[styles.gridText, { color: theme.text, fontSize: gridTextSize(textSize) }]}>No results found.</Text>}
+        />
       </View>
     </ScrollView>
   );

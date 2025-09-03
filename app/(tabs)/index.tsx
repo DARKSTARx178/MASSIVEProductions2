@@ -4,11 +4,16 @@ import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { getThemeColors } from '@/utils/theme';
 import { getFontSizeValue } from '@/utils/fontSizes';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import { getOrderHistory, addOrderToHistory, OrderHistoryItem } from '@/utils/userHistory';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { homeTranslations } from '@/utils/translations';
-import { useLanguage } from '@/contexts/LanguageContext';
+
+// Sample quotes
+const quotes = [
+  "Success is the sum of small efforts repeated day in and day out.",
+  "Don't let what you cannot do interfere with what you can do.",
+  "The expert in anything was once a beginner.",
+  "Push yourself, because no one else is going to do it for you.",
+  "Small progress is still progress."
+];
 
 export default function HomeScreen() {
   const { scheme, fontSize } = useAccessibility();
@@ -19,132 +24,50 @@ export default function HomeScreen() {
   const screenWidth = Dimensions.get('window').width;
   const responsiveText = (base: number) => Math.max(base * (screenWidth / 400), base * 0.85);
 
-  const [user, setUser] = useState<string | null>(null);
-  const [orderHistory, setOrderHistory] = useState<OrderHistoryItem[]>([]);
-  const { lang } = useLanguage();
-  const t = homeTranslations[lang];
+  const [quote, setQuote] = useState('');
 
   useEffect(() => {
-    (async () => {
-      const username = await SecureStore.getItemAsync('user');
-      setUser(username);
-      if (username) {
-        const history = await getOrderHistory(username);
-        setOrderHistory(history);
-      } else {
-        setOrderHistory([]);
-      }
-    })();
+    // Pick a random quote daily (simple version)
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    setQuote(randomQuote);
   }, []);
-//@ts-ignore
-  const handleRenew = (order) => {
-    router.push({ pathname: '/rental/renew', params: { ...order, stock: order.stock || 1 } });
-  };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: theme.background }} contentContainerStyle={{ alignItems: 'center', justifyContent: 'flex-start', paddingBottom: 40 }}>
-      <Text style={[styles.logo, { fontSize: responsiveText(textSize + 10), color: theme.text }]}>{t.home}</Text>
-      <View style={styles.row}>
-        <TouchableOpacity onPress={() => router.push('/explore')} style={[styles.card, { backgroundColor: theme.unselectedTab, width: screenWidth / 2 - 30 }]}>
-          <MaterialCommunityIcons name="hospital-box" size={32} color={theme.text} />
-          <Text style={[styles.cardText, { fontSize: responsiveText(textSize), color: theme.text }]}>{t.bookEquipment}</Text>
-        </TouchableOpacity>
+    <ScrollView style={{ flex: 1, backgroundColor: theme.background }} contentContainerStyle={{ alignItems: 'center', paddingBottom: 40 }}>
+      {/* App Logo */}
+      <Text style={[styles.logo, { fontSize: responsiveText(textSize + 12), color: theme.text }]}>📚 app name</Text>
 
-        <TouchableOpacity onPress={() => router.push('/services')} style={[styles.card, { backgroundColor: theme.unselectedTab, width: screenWidth / 2 - 30 }]}>
-          <MaterialCommunityIcons name="account-heart" size={32} color={theme.text} />
-          <Text style={[styles.cardText, { fontSize: responsiveText(textSize), color: theme.text }]}>{t.services}</Text>
-        </TouchableOpacity>
+      {/* Daily Quote */}
+      <View style={[styles.quoteBox, { backgroundColor: theme.unselectedTab, width: screenWidth - 40 }]}>
+        <Text style={{ color: theme.text, fontSize: responsiveText(textSize), fontStyle: 'italic', textAlign: 'center' }}>
+          “{quote}”
+        </Text>
       </View>
 
+      {/* Cards for study features */}
       <View style={styles.row}>
-        <TouchableOpacity onPress={() => router.push('/assistance')} style={[styles.card, { backgroundColor: theme.unselectedTab, width: screenWidth - 40 }]}>
-          <MaterialCommunityIcons name="hand-heart" size={32} color={theme.text} />
-          <Text style={[styles.cardText, { fontSize: responsiveText(textSize), color: theme.text }]}>{t.requireAssistance}</Text>
+        <TouchableOpacity onPress={() => router.push('/assignments')} style={[styles.card, { backgroundColor: theme.unselectedTab, width: screenWidth / 2 - 30 }]}>
+          <MaterialCommunityIcons name="pencil" size={32} color={theme.text} />
+          <Text style={[styles.cardText, { fontSize: responsiveText(textSize), color: theme.text }]}>Work</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push('/study')} style={[styles.card, { backgroundColor: theme.unselectedTab, width: screenWidth / 2 - 30 }]}>
+          <MaterialCommunityIcons name="book" size={32} color={theme.text} />
+          <Text style={[styles.cardText, { fontSize: responsiveText(textSize), color: theme.text }]}>Focus</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity onPress={() => router.push('/delivery' as any)} style={[styles.fullButton, { backgroundColor: theme.primary, width: screenWidth - 40 }]}>
-        <Text style={[styles.buttonText, { fontSize: responsiveText(textSize), color: '#fff' }]}>{t.myRentals}</Text>
+      {/* Extra Button */}
+      <TouchableOpacity onPress={() => router.push('/settings')} style={[styles.fullButton, { backgroundColor: theme.primary, width: screenWidth - 40 }]}>
+        <Text style={[styles.buttonText, { fontSize: responsiveText(textSize), color: '#fff' }]}>⚙️ Settings</Text>
       </TouchableOpacity>
-
-      {!user ? (
-        <>
-          <Text style={[styles.welcome, { fontSize: responsiveText(textSize + 6), color: theme.text }]}>{t.welcome}</Text>
-          <View style={styles.row}>
-            <TouchableOpacity onPress={() => router.push('/register' as any)} style={[styles.button, { backgroundColor: theme.primary, width: screenWidth / 2 - 20 }]}>
-              <Text style={[styles.buttonText, { fontSize: responsiveText(textSize), color: '#fff' }]}>{t.createAccount}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/login' as any)} style={[styles.button, { backgroundColor: theme.primary, width: screenWidth / 2 - 20 }]}>
-              <Text style={[styles.buttonText, { fontSize: responsiveText(textSize), color: '#fff' }]}>{t.login}</Text>
-            </TouchableOpacity>
-          </View>
-        </>
-      ) : (
-        <View style={styles.row}>
-          <TouchableOpacity onPress={() => router.push('/feedback' as any)} style={[styles.button, { backgroundColor: theme.primary, width: screenWidth - 40 }]}>
-            <Text style={[styles.buttonText, { fontSize: responsiveText(textSize), color: '#fff' }]}>{t.submitFeedback}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Order History Section */}
-      <Text style={{ color: theme.text, fontSize: responsiveText(textSize + 4), fontWeight: 'bold', marginTop: 32, marginBottom: 8 }}>{t.orderHistory}</Text>
-      {!user ? (
-        <Text style={{ color: theme.unselected, fontSize: textSize }}>{t.signInToSeeHistory}</Text>
-      ) : orderHistory.length === 0 ? (
-        <Text style={{ color: theme.unselected, fontSize: textSize }}>{t.noOrders}</Text>
-      ) : (
-        <>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ width: '100%', paddingLeft: 10 }}>
-            {orderHistory.slice(0, 3).map(order => (
-              <View key={order.id} style={{
-                backgroundColor: theme.unselectedTab,
-                borderRadius: 12,
-                padding: 16,
-                marginRight: 16,
-                minWidth: 180,
-                maxWidth: 220,
-                alignItems: 'flex-start',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.08,
-                shadowRadius: 4,
-                elevation: 2,
-                position: 'relative',
-              }}>
-                <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: responsiveText(textSize) }}>{order.name}</Text>
-                <Text style={{ color: theme.text, fontSize: responsiveText(textSize - 2) }}>{t.date}: {order.date}</Text>
-                <Text style={{ color: theme.text, fontSize: responsiveText(textSize - 2) }}>{t.status}: {order.status}</Text>
-                <Text style={{ color: theme.text, fontSize: responsiveText(textSize - 2) }}>{t.amount}: ${order.amount}</Text>
-                <Text style={{ color: theme.text, fontSize: responsiveText(textSize - 2) }}>{t.quantity}: {order.quantity}</Text>
-                {order.mode === 'rent' && (
-                  <Text style={{ color: theme.text, fontSize: responsiveText(textSize - 2) }}>{t.rental}: {order.rentalStart} - {order.rentalEnd}</Text>
-                )}
-              </View>
-            ))}
-          </ScrollView>
-          <TouchableOpacity onPress={() => router.push('/delivery')} style={{ marginTop: 12, alignSelf: 'flex-end', marginRight: 24 }}>
-            <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: textSize }}>{t.seeFullHistory}</Text>
-          </TouchableOpacity>
-        </>
-      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
   logo: {
     fontWeight: 'bold',
     marginVertical: 20,
-  },
-  logoPart: {
-    fontWeight: 'bold',
   },
   row: {
     flexDirection: 'row',
@@ -158,28 +81,28 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
+  cardText: {
+    marginTop: 10,
+    textAlign: 'center',
+  },
   fullButton: {
     padding: 18,
     borderRadius: 12,
     marginVertical: 16,
     alignItems: 'center',
   },
-  cardText: {
-    marginTop: 10,
-    textAlign: 'center',
-  },
-  welcome: {
-    fontWeight: 'bold',
-    marginTop: 30,
-    marginBottom: 20,
-  },
-  button: {
-    padding: 15,
-    borderRadius: 10,
-    margin: 10,
-  },
   buttonText: {
     fontWeight: '600',
     textAlign: 'center',
+  },
+  quoteBox: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker'; // ✅ dropdown
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { getThemeColors } from '@/utils/theme';
 import { getFontSizeValue } from '@/utils/fontSizes';
@@ -18,13 +19,14 @@ export default function Register() {
 
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
+  const [studentClass, setStudentClass] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleRegister = async () => {
     setError('');
 
-    if (!email || !password || !username) {
+    if (!email || !password || !username || !studentClass) {
       setError('Please fill all fields.');
       return;
     }
@@ -38,8 +40,10 @@ export default function Register() {
       await setDoc(doc(db, 'users', user.uid), {
         username,
         email,
-        role: 'user',      // default role
         createdAt: new Date(),
+        class: studentClass,
+        friends: [],
+        online: true, 
       });
 
       // ✅ Save locally for profile
@@ -63,6 +67,7 @@ export default function Register() {
         Register
       </Text>
 
+      {/* Username */}
       <TextInput
         style={[styles.input, { color: theme.text, borderColor: theme.primary }]}
         placeholder="Username"
@@ -72,6 +77,28 @@ export default function Register() {
         onChangeText={setUsername}
       />
 
+      {/* Class Dropdown */}
+      <View style={[styles.pickerContainer, { borderColor: theme.primary }]}>
+        <Picker
+          selectedValue={studentClass}
+          onValueChange={(itemValue) => setStudentClass(itemValue)}
+          style={{ color: theme.text }}
+        >
+          <Picker.Item label="Select your class" value="" />
+          <Picker.Item label="S2-01" value="assignments201" />
+          <Picker.Item label="S2-02" value="assignments202" />
+          <Picker.Item label="S2-03" value="assignments203" />
+          <Picker.Item label="S2-04" value="assignments204" />
+          <Picker.Item label="S2-05" value="assignments205" />
+          <Picker.Item label="S2-06" value="assignments206" />
+          <Picker.Item label="S2-07" value="assignments207" />
+          <Picker.Item label="S2-08" value="assignments208" />
+          <Picker.Item label="S2-09" value="assignments209" />
+          <Picker.Item label="S2-10" value="assignments210" />
+        </Picker>
+      </View>
+
+      {/* Email */}
       <TextInput
         style={[styles.input, { color: theme.text, borderColor: theme.primary }]}
         placeholder="Email"
@@ -82,6 +109,7 @@ export default function Register() {
         onChangeText={setEmail}
       />
 
+      {/* Password */}
       <TextInput
         style={[styles.input, { color: theme.text, borderColor: theme.primary }]}
         placeholder="Password"
@@ -93,6 +121,7 @@ export default function Register() {
 
       {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
 
+      {/* Register Button */}
       <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleRegister}>
         <Text style={{ color: theme.background, fontWeight: 'bold', fontSize: textSize }}>Register</Text>
       </TouchableOpacity>
@@ -126,6 +155,13 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     fontSize: 16,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+  },
+  pickerContainer: {
+    width: '100%',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 16,
     backgroundColor: 'rgba(0,0,0,0.04)',
   },
   button: {

@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { getThemeColors } from '@/utils/theme';
 import { getFontSizeValue } from '@/utils/fontSizes';
-import { auth } from '../firebase/firebase';
+import { auth, db } from '../firebase/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
-
-const Login: React.FC = () => {
+export default function Login() {
   const router = useRouter();
   const { fontSize } = useAccessibility();
   const theme = getThemeColors();
   const textSize = getFontSizeValue(fontSize);
-  const [email, setEmail] = useState(''); // Firebase uses email instead of "username"
+
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -31,10 +32,18 @@ const Login: React.FC = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // ✅ Store user securely
-      await SecureStore.setItemAsync('user', JSON.stringify({ uid: user.uid, email: user.email }));
+      // ✅ Get user doc from Firestore to retrieve username & class
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (!userDoc.exists()) throw new Error('User data not found');
 
-      // ✅ Redirect
+      const userData = userDoc.data();
+
+      // ✅ Store securely
+      await SecureStore.setItemAsync('uid', user.uid);
+      await SecureStore.setItemAsync('user', userData.username);
+      await SecureStore.setItemAsync('class', userData.class);
+
+      // ✅ Redirect to profile
       router.replace('/profile');
     } catch (e: any) {
       console.error('Login error:', e);
@@ -47,7 +56,10 @@ const Login: React.FC = () => {
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={28} color={theme.text} />
       </TouchableOpacity>
-      <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: textSize + 8, marginBottom: 20 }}>Login</Text>
+
+      <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: textSize + 8, marginBottom: 20 }}>
+        Login
+      </Text>
 
       <TextInput
         style={[styles.input, { color: theme.text, borderColor: theme.primary }]}
@@ -78,7 +90,7 @@ const Login: React.FC = () => {
       </TouchableOpacity>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -102,7 +114,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     fontSize: 16,
-    backgroundColor: 'rgba(0,0,0,0.04)'
+    backgroundColor: 'rgba(0,0,0,0.04)',
   },
   button: {
     width: '100%',
@@ -112,5 +124,3 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 });
-
-export default Login;

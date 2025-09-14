@@ -79,13 +79,13 @@
     "@types/history": "^4.7.11",
     "@types/json-schema": "^7.0.15",
     "@types/md5": "^2.3.5",
-    "@types/react": "~19.0.10",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "~19.1.10",
+    "@types/react-dom": "~19.1.7",
     "@types/react-native-maps": "^0.24.1",
     "@types/react-native-vector-icons": "^6.4.18",
     "eslint": "^9.25.0",
-    "eslint-config-expo": "~9.2.0",
-    "typescript": "~5.8.3"
+    "eslint-config-expo": "~10.0.0",
+    "typescript": "~5.9.2"
   },
   "private": true,
   "description": "TwinXCare is a student-built mobile and web application created for **Yong-En Care Centre**. It aims to **simplify and centralize the rental of medical equipment**, connecting caregivers with suppliers in a smooth, accessible way.",

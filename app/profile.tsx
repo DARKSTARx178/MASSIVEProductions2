@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { getThemeColors } from '@/utils/theme';
 import { getFontSizeValue } from '@/utils/fontSizes';
-import * as SecureStore from 'expo-secure-store';
+import { getAuth, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 
@@ -15,37 +15,48 @@ export default function Profile() {
   const theme = getThemeColors();
   const textSize = getFontSizeValue(fontSize);
 
-  const [user, setUser] = useState<string | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [username, setUsername] = useState<string | null>(null); // <-- store Firestore username
   const [role, setRole] = useState<string>('user');
 
-  useEffect(() => {
-    (async () => {
-      const currentUsername = await SecureStore.getItemAsync('user');
-      const uid = await SecureStore.getItemAsync('uid');
-      if (currentUsername && uid) {
-        setUser(currentUsername);
+  const auth = getAuth();
 
-        // ✅ Fetch role from Firestore
-        const userDoc = await getDoc(doc(db, 'users', uid));
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+
+        // ✅ fetch username and role from Firestore
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         if (userDoc.exists()) {
           const data = userDoc.data();
+          setUsername(data.username || 'User');
           setRole(data.role || 'user');
+        } else {
+          setUsername('User');
+          setRole('user');
         }
       } else {
         setUser(null);
+        setUsername(null);
+        setRole('user');
       }
-    })();
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleLogin = () => router.push('/login');
   const handleRegister = () => router.push('/register');
 
   const handleLogout = async () => {
-    await SecureStore.deleteItemAsync('user');
-    await SecureStore.deleteItemAsync('uid');
-    setUser(null);
-    setRole('user');
-    Alert.alert('Signed Out', 'You have been signed out.');
+    try {
+      await signOut(auth);
+      Alert.alert('Signed Out', 'You have been signed out.');
+    } catch (err) {
+      console.error('Logout error:', err);
+      Alert.alert('Error', 'Failed to sign out.');
+    }
   };
 
   const handleAdminMode = () => router.push('/admin/admin');
@@ -67,15 +78,14 @@ export default function Profile() {
         <>
           <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
             <Text style={{ color: theme.background, fontWeight: 'bold', fontSize: 48 }}>
-              {user.charAt(0).toUpperCase()}
+              {username ? username.charAt(0).toUpperCase() : 'U'}
             </Text>
           </View>
           <Text style={{ color: theme.text, fontWeight: 'bold', marginBottom: 6, fontSize: textSize + 8 }}>
-            {user}
+            {username || 'User'}
           </Text>
           <Text style={{ color: theme.text, marginBottom: 20, fontSize: textSize }}>Signed in</Text>
 
-          {/* ✅ Show Admin button if role is admin */}
           {role === 'admin' && (
             <TouchableOpacity
               style={{

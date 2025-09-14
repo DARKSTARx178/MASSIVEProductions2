@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -6,27 +5,27 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { getThemeColors } from '@/utils/theme';
 import { getFontSizeValue } from '@/utils/fontSizes';
-import * as SecureStore from 'expo-secure-store';
+import { getAuth, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
 
 export default function ChangePassword() {
   const router = useRouter();
   const { fontSize } = useAccessibility();
   const theme = getThemeColors();
   const textSize = getFontSizeValue(fontSize);
+
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<string | null>(null);
 
-  React.useEffect(() => {
-    (async () => {
-      const currentUser = await SecureStore.getItemAsync('user');
-      setUser(currentUser);
-    })();
-  }, []);
+  const auth = getAuth();
+  const user = auth.currentUser;
 
   const handleChangePassword = async () => {
+    if (!user) {
+      Alert.alert('Error', 'No user logged in!');
+      return;
+    }
     if (!currentPw || !newPw || !confirmPw) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
@@ -35,34 +34,43 @@ export default function ChangePassword() {
       Alert.alert('Error', 'New passwords do not match.');
       return;
     }
+
     setLoading(true);
+
     try {
-      const res = await fetch('http://172.22.129.135:8080/api/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: user, currentPassword: currentPw, newPassword: newPw }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        Alert.alert('Success', 'Password changed successfully.');
-        setCurrentPw(''); setNewPw(''); setConfirmPw('');
-        router.back();
+      // ✅ Reauthenticate first
+      const credential = EmailAuthProvider.credential(user.email!, currentPw);
+      await reauthenticateWithCredential(user, credential);
+
+      // ✅ Update password
+      await updatePassword(user, newPw);
+      Alert.alert('Success', 'Password changed successfully.');
+      setCurrentPw('');
+      setNewPw('');
+      setConfirmPw('');
+      router.back();
+    } catch (err: any) {
+      console.error('Password change error:', err);
+      if (err.code === 'auth/wrong-password') {
+        Alert.alert('Error', 'Current password is incorrect.');
       } else {
-        Alert.alert('Error', data.message || 'Failed to change password.');
+        Alert.alert('Error', err.message || 'Failed to change password.');
       }
-    } catch (e) {
-      Alert.alert('Error', 'Network error.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}> 
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={28} color={theme.text} />
       </TouchableOpacity>
-      <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: textSize + 8, marginBottom: 24, marginTop: 16 }}>Change Password</Text>
+
+      <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: textSize + 8, marginBottom: 24, marginTop: 16 }}>
+        Change Password
+      </Text>
+
       <TextInput
         style={[styles.input, { color: theme.text, borderColor: theme.primary }]}
         placeholder="Current Password"
@@ -90,12 +98,17 @@ export default function ChangePassword() {
         onChangeText={setConfirmPw}
         autoCapitalize="none"
       />
+
       <TouchableOpacity
         style={[styles.button, { backgroundColor: theme.primary, marginTop: 16 }]}
         onPress={handleChangePassword}
         disabled={loading}
       >
-        {loading ? <ActivityIndicator color={theme.background} /> : <Text style={{ color: theme.background, fontWeight: 'bold' }}>Change</Text>}
+        {loading ? (
+          <ActivityIndicator color={theme.background} />
+        ) : (
+          <Text style={{ color: theme.background, fontWeight: 'bold' }}>Change</Text>
+        )}
       </TouchableOpacity>
     </View>
   );

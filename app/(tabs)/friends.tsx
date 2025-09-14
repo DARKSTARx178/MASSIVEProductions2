@@ -8,7 +8,7 @@ import {
     StyleSheet,
     AppState
 } from 'react-native';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import app from '../../firebase/firebase';
 
@@ -19,7 +19,6 @@ interface User {
     class: string;
     friends: string[];
 }
-
 
 export default function FriendsScreen() {
     const [friends, setFriends] = useState<User[]>([]);
@@ -56,7 +55,11 @@ export default function FriendsScreen() {
     // Fetch current user + friends
     const fetchUserAndFriends = async () => {
         const user = auth.currentUser;
-        if (!user) return;
+        if (!user) {
+            setCurrentUser(null);
+            setFriends([]);
+            return;
+        }
         const userRef = doc(db, 'users', user.uid);
         const snap = await getDoc(userRef);
         if (!snap.exists()) return;
@@ -75,36 +78,34 @@ export default function FriendsScreen() {
 
     // Fetch all users for adding friends
     const fetchAllUsers = async () => {
+        const user = auth.currentUser;
+        if (!user) {
+            setAllUsers([]);
+            return;
+        }
         const usersCol = collection(db, 'users');
         const userDocs = await getDocs(usersCol);
         const usersList: User[] = userDocs.docs
-            .filter((d) => d.id !== auth.currentUser?.uid) // exclude self
+            .filter((d) => d.id !== user.uid) // exclude self
             .map((d) => ({ uid: d.id, ...(d.data() as User) }));
         setAllUsers(usersList);
     };
 
     useEffect(() => {
-        // Initial fetch
         fetchUserAndFriends();
         fetchAllUsers();
 
-        // Refresh every 15 seconds
         const interval = setInterval(() => {
             fetchUserAndFriends();
             fetchAllUsers();
-        }, 10000); // 15000ms = 15s
+        }, 10000);
 
         return () => clearInterval(interval);
     }, []);
 
-    useEffect(() => {
-        fetchUserAndFriends();
-        fetchAllUsers();
-    }, []);
-
     // Add friend
     const handleAddFriend = async (friend: User) => {
-        if (!currentUser) return;
+        if (!currentUser) return; // can't add if not logged in
         const userRef = doc(db, 'users', currentUser.uid);
         const updatedFriends = [...(currentUser.friends || []), friend.uid];
         await updateDoc(userRef, { friends: updatedFriends });
@@ -114,46 +115,67 @@ export default function FriendsScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>👫 Friends</Text>
+            <Text style={styles.header}>Friends</Text>
 
-            <Text style={{ marginBottom: 8 }}>Search users to add:</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Search by username"
-                value={searchName}
-                onChangeText={setSearchName}
-            />
+            {currentUser ? (
+                <>
+                    <Text style={{ marginBottom: 8 }}>Search users to add:</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Search by username"
+                        value={searchName}
+                        onChangeText={setSearchName}
+                    />
 
-            <FlatList
-                data={allUsers.filter((u) => u.username.toLowerCase().includes(searchName.toLowerCase()) &&
-                    !(currentUser?.friends || []).includes(u.uid)
-                )}
-                keyExtractor={(item) => item.uid}
-                renderItem={({ item }) => (
-                    <View style={styles.userItem}>
-                        <Text>{item.username} ({item.class})</Text>
-                        <TouchableOpacity style={styles.addButton} onPress={() => handleAddFriend(item)}>
-                            <Text style={{ color: 'white' }}>Add</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-                ListEmptyComponent={<Text>No users found</Text>}
-            />
+                    <FlatList
+                        data={allUsers.filter(
+                            (u) =>
+                                u.username.toLowerCase().includes(searchName.toLowerCase()) &&
+                                !(currentUser?.friends || []).includes(u.uid)
+                        )}
+                        keyExtractor={(item) => item.uid}
+                        renderItem={({ item }) => (
+                            <View style={styles.userItem}>
+                                <Text>{item.username} ({item.class})</Text>
+                                <TouchableOpacity
+                                    style={styles.addButton}
+                                    onPress={() => handleAddFriend(item)}
+                                >
+                                    <Text style={{ color: 'white' }}>Add</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                        ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20 }}>No users found</Text>}
+                    />
 
-            <Text style={{ marginTop: 20, fontWeight: 'bold' }}>Your friends:</Text>
-            <FlatList
-                data={friends}
-                keyExtractor={(item) => item.uid}
-                renderItem={({ item }) => (
-                    <View style={styles.userItem}>
-                        <Text>{item.username}</Text>
-                        <Text style={{ color: item.online ? 'green' : 'gray' }}>
-                            {item.online ? '🟢 Online' : '⚪ Offline'}
-                        </Text>
-                    </View>
-                )}
-                ListEmptyComponent={<Text>You have no friends yet</Text>}
-            />
+                    <Text style={{ marginTop: 20, fontWeight: 'bold' }}>Your friends:</Text>
+                    <FlatList
+                        data={friends}
+                        keyExtractor={(item) => item.uid}
+                        renderItem={({ item }) => (
+                            <View style={styles.userItem}>
+                                <Text>{item.username}</Text>
+                                <Text style={{ color: item.online ? 'green' : 'gray' }}>
+                                    {item.online ? '🟢 Online' : '⚪ Offline'}
+                                </Text>
+                            </View>
+                        )}
+                        ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20 }}>You have no friends tuff</Text>}
+                    />
+                </>
+            ) : (
+                <>
+                    <FlatList
+                        data={[{ id: '1', name: 'Log in' }]}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <View style={[styles.userItem, { justifyContent: 'center' }]}>
+                                <Text>{item.name}</Text>
+                            </View>
+                        )}
+                    />
+                </>
+            )}
         </View>
     );
 }

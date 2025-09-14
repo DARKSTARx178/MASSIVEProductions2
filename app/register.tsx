@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker'; // ✅ dropdown
+import { Picker } from '@react-native-picker/picker';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { getThemeColors } from '@/utils/theme';
 import { getFontSizeValue } from '@/utils/fontSizes';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
-import * as SecureStore from 'expo-secure-store';
 
 export default function Register() {
   const router = useRouter();
@@ -43,13 +42,11 @@ export default function Register() {
         createdAt: new Date(),
         class: studentClass,
         friends: [],
-        online: true, 
+        online: true,
+        role: 'user',
       });
 
-      // ✅ Save locally for profile
-      await SecureStore.setItemAsync('uid', user.uid);
-      await SecureStore.setItemAsync('user', username);
-
+      // ✅ Redirect to profile (Profile will detect login via onAuthStateChanged)
       router.replace('/profile');
     } catch (e: any) {
       console.error('Registration error:', e);

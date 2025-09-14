@@ -224,7 +224,7 @@ export default function AssignmentsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>📖 Assignments</Text>
+      <Text style={styles.header}>Assignments</Text>
 
       <FlatList
         data={assignments}
@@ -253,7 +253,11 @@ export default function AssignmentsScreen() {
             </View>
           </View>
         )}
-        ListEmptyComponent={<Text>No assignments found 🎉</Text>}
+        ListEmptyComponent={
+          !className
+            ? <Text style={{ textAlign: 'center', marginTop: 20 }}>Not logged in</Text>
+            : <Text style={{ textAlign: 'center', marginTop: 20 }}>No assignments yay</Text>
+        }
         refreshing={refreshing}
         onRefresh={() => {
           setRefreshing(true);
@@ -262,7 +266,7 @@ export default function AssignmentsScreen() {
       />
 
       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-        <Text style={styles.addButtonText}>➕ Add Assignment</Text>
+        <Text style={styles.addButtonText}>Add Assignment</Text>
       </TouchableOpacity>
 
       {/* Modal */}

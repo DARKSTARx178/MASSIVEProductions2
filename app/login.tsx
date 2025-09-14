@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { getThemeColors } from '@/utils/theme';
 import { getFontSizeValue } from '@/utils/fontSizes';
@@ -32,18 +31,11 @@ export default function Login() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // ✅ Get user doc from Firestore to retrieve username & class
+      // ✅ Fetch user doc to get username, class, etc.
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (!userDoc.exists()) throw new Error('User data not found');
 
-      const userData = userDoc.data();
-
-      // ✅ Store securely
-      await SecureStore.setItemAsync('uid', user.uid);
-      await SecureStore.setItemAsync('user', userData.username);
-      await SecureStore.setItemAsync('class', userData.class);
-
-      // ✅ Redirect to profile
+      // ✅ Redirect to profile; login state is maintained via Firebase Auth
       router.replace('/profile');
     } catch (e: any) {
       console.error('Login error:', e);

@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native'
 
-const API_BASE = 'https://your-vercel-deployment.vercel.app/api/room'
+const API_BASE = 'https://massive-productions2.vercel.app/api/room'
 
 type Room = {
   id: string

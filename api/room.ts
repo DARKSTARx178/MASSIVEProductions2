@@ -23,7 +23,13 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === 'GET') {
         const { id } = req.query;
-        if (!id || !rooms[id as string]) return res.status(404).json({ error: 'Room not found' });
+        // If no id provided, return all rooms
+        if (!id) {
+            const list = Object.values(rooms).map(r => ({ id: r.id, host: r.host, timer: r.timer, running: r.running, friends: r.friends }));
+            return res.json(list);
+        }
+
+        if (!rooms[id as string]) return res.status(404).json({ error: 'Room not found' });
         return res.json(rooms[id as string]);
     }
 
@@ -34,7 +40,14 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
         if (action === 'start') rooms[id].running = true;
         if (action === 'stop') rooms[id].running = false;
         if (action === 'updateTimer') rooms[id].timer = timer;
-        if (action === 'addFriend') rooms[id].friends.push(friend);
+        if (action === 'addFriend') {
+            // avoid duplicates
+            if (!rooms[id].friends.includes(friend)) rooms[id].friends.push(friend);
+        }
+
+        if (action === 'removeFriend') {
+            rooms[id].friends = rooms[id].friends.filter(f => f !== friend);
+        }
 
         return res.json(rooms[id]);
     }

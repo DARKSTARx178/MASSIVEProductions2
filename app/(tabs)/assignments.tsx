@@ -1,23 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Button,
-  Platform,
-} from 'react-native';
-import { getFirestore, doc, getDoc, collection, getDocs, setDoc } from 'firebase/firestore';
-import app from '../../firebase/firebase';
-import { getAuth } from 'firebase/auth';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
+import { getAuth } from 'firebase/auth';
+import { collection, doc, getDoc, getDocs, getFirestore, setDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Button,
+  FlatList,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import app from '../../firebase/firebase';
 
 interface Assignment {
+  id?: string;
   title: string;
   desc: string;
   due: string;
@@ -92,8 +93,9 @@ export default function AssignmentsScreen() {
           await setDoc(subjectRef, { assignments: assignmentsMap }, { merge: true });
         }
 
-        // Add subject info
-        const parsed: Assignment[] = Object.values(assignmentsMap).map((a: Assignment) => ({
+        // Add subject info and preserve the keys as `id`
+        const parsed: Assignment[] = Object.entries(assignmentsMap).map(([key, a]: [string, any]) => ({
+          id: key,
           ...a,
           subject: subj,
         }));
@@ -162,9 +164,14 @@ export default function AssignmentsScreen() {
     if (!subjectSnap.exists()) return;
 
     const assignmentsMap = subjectSnap.data()?.assignments || {};
-    const keyToDelete = Object.keys(assignmentsMap).find(
-      (key) => assignmentsMap[key].title === item.title && assignmentsMap[key].desc === item.desc
-    );
+    let keyToDelete: string | undefined = undefined;
+    if (item.id && assignmentsMap[item.id]) keyToDelete = item.id
+    else {
+      // fallback: match by title+desc
+      keyToDelete = Object.keys(assignmentsMap).find(
+        (key) => assignmentsMap[key].title === item.title && assignmentsMap[key].desc === item.desc
+      );
+    }
 
     if (keyToDelete) {
       delete assignmentsMap[keyToDelete];
@@ -228,7 +235,7 @@ export default function AssignmentsScreen() {
 
       <FlatList
         data={assignments}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id || `${item.title}-${item.due}`}
         renderItem={({ item }) => (
           <View style={styles.item}>
             <Text style={styles.title}>{item.title}</Text>

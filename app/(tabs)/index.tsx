@@ -35,7 +35,7 @@ export default function HomeScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: theme.background }} contentContainerStyle={{ alignItems: 'center', paddingBottom: 40 }}>
       {/* App Logo */}
-      <Text style={[styles.logo, { fontSize: responsiveText(textSize + 12), color: theme.text }]}>📚 app name</Text>
+      <Text style={[styles.logo, { fontSize: responsiveText(textSize + 12), color: theme.text }]}>ukalongsaskong</Text>
 
       {/* Daily Quote */}
       <View style={[styles.quoteBox, { backgroundColor: theme.unselectedTab, width: screenWidth - 40 }]}>

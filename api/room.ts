@@ -3,6 +3,8 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 interface Room {
     id: string;
     host: string;
+    // optional display title for the room (separate from host)
+    title?: string;
     // timer stored as seconds for accuracy
     timer: number;
     running: boolean;
@@ -18,10 +20,10 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === 'POST') {
         // Create room
-        const { host, timer = 0 } = req.body;
+        const { host, timer = 0, title } = req.body;
         const id = Math.random().toString(36).substr(2, 8);
         // expect timer in seconds
-        rooms[id] = { id, host, timer, running: false, friends: [], initialTimer: timer };
+        rooms[id] = { id, host, title, timer, running: false, friends: [], initialTimer: timer };
         return res.status(201).json({ id });
     }
 
@@ -29,7 +31,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
         const { id } = req.query;
         // If no id provided, return all rooms (convert timer to seconds as-is)
         if (!id) {
-            const list = Object.values(rooms).map(r => ({ id: r.id, host: r.host, timer: r.timer, running: r.running, friends: r.friends }));
+            const list = Object.values(rooms).map(r => ({ id: r.id, host: r.host, title: r.title, timer: r.timer, running: r.running, friends: r.friends }));
             return res.json(list);
         }
 
